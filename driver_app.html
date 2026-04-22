@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BASU Driver App</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --card: #1a1d27;
+    --card2: #22263a;
+    --accent: #6c63ff;
+    --accent2: #ff6584;
+    --green: #22d3a5;
+    --yellow: #fbbf24;
+    --border: rgba(255,255,255,0.07);
+    --text: #f0f0f8;
+    --muted: #7b7f9e;
+    --radius: 16px;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* BG decoration */
+  body::before {
+    content:'';
+    position:fixed;
+    top:-200px; right:-200px;
+    width:500px; height:500px;
+    background: radial-gradient(circle, rgba(108,99,255,0.15) 0%, transparent 70%);
+    pointer-events:none; z-index:0;
+  }
+  body::after {
+    content:'';
+    position:fixed;
+    bottom:-150px; left:-150px;
+    width:400px; height:400px;
+    background: radial-gradient(circle, rgba(34,211,165,0.1) 0%, transparent 70%);
+    pointer-events:none; z-index:0;
+  }
+
+  /* HEADER */
+  .header {
+    position: sticky; top:0; z-index:100;
+    background: rgba(15,17,23,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 20px;
+    display: flex; align-items:center; justify-content:space-between;
+  }
+  .header-logo {
+    display:flex; align-items:center; gap:10px;
+  }
+  .logo-icon {
+    width:36px; height:36px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius:10px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.1rem;
+  }
+  .logo-text { font-family:'Syne',sans-serif; font-weight:800; font-size:.95rem; }
+  .logo-text span { color: var(--accent); }
+  .logo-sub { font-size:.65rem; color:var(--muted); margin-top:-2px; }
+
+  .sync-badge {
+    font-size:.7rem; padding:4px 10px;
+    border-radius:20px; font-weight:600;
+    background: rgba(34,211,165,0.15);
+    color: var(--green);
+    border: 1px solid rgba(34,211,165,0.3);
+  }
+
+  /* MAIN */
+  .container { position:relative; z-index:1; padding:20px; max-width:480px; margin:0 auto; }
+
+  /* ROUTE SELECTOR */
+  .route-selector {
+    display: grid; grid-template-columns: repeat(3,1fr); gap:8px;
+    margin-bottom: 20px;
+  }
+  .route-btn {
+    padding: 10px 6px;
+    border-radius: 12px;
+    border: 1.5px solid var(--border);
+    background: var(--card);
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: .75rem;
+    cursor: pointer;
+    transition: all .2s;
+    text-align: center;
+  }
+  .route-btn:hover { border-color: var(--accent); color: var(--text); }
+  .route-btn.active {
+    background: linear-gradient(135deg, var(--accent), #8b5cf6);
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(108,99,255,0.4);
+  }
+  .route-btn .r-count {
+    display:block; font-size:.65rem; font-weight:400;
+    margin-top:2px; opacity:.8;
+  }
+
+  /* DAY SELECTOR */
+  .day-selector {
+    display:flex; gap:6px; margin-bottom:18px; overflow-x:auto;
+    padding-bottom:4px;
+    scrollbar-width:none;
+  }
+  .day-selector::-webkit-scrollbar { display:none; }
+  .day-btn {
+    flex-shrink:0;
+    padding:6px 14px;
+    border-radius:20px;
+    border:1.5px solid var(--border);
+    background:var(--card);
+    color:var(--muted);
+    font-size:.72rem; font-weight:600;
+    cursor:pointer; transition:all .2s;
+    white-space:nowrap;
+  }
+  .day-btn.active {
+    background:var(--green);
+    border-color:transparent;
+    color:#0f1117;
+  }
+
+  /* DRIVER CARD */
+  .driver-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 16px;
+    position:relative; overflow:hidden;
+  }
+  .driver-card::before {
+    content:'';
+    position:absolute; top:0; left:0; right:0; height:3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+  .driver-header {
+    display:flex; align-items:center; gap:12px; margin-bottom:14px;
+  }
+  .driver-avatar {
+    width:44px; height:44px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius:12px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.2rem; flex-shrink:0;
+  }
+  .driver-name { font-family:'Syne',sans-serif; font-weight:700; font-size:.95rem; }
+  .driver-meta { font-size:.72rem; color:var(--muted); margin-top:2px; }
+  .driver-phone {
+    margin-left:auto;
+    display:flex; align-items:center; gap:6px;
+  }
+  .call-btn {
+    display:flex; align-items:center; gap:5px;
+    padding:6px 12px; border-radius:20px;
+    background:rgba(34,211,165,0.15);
+    color:var(--green);
+    border:1px solid rgba(34,211,165,0.3);
+    font-size:.72rem; font-weight:600;
+    text-decoration:none; cursor:pointer;
+    transition:all .2s;
+  }
+  .call-btn:hover { background:rgba(34,211,165,0.25); }
+
+  /* STOP TIMELINE */
+  .stop-label {
+    font-size:.68rem; font-weight:700; color:var(--muted);
+    text-transform:uppercase; letter-spacing:.08em;
+    margin-bottom:10px;
+  }
+  .timeline { position:relative; }
+  .stop-item {
+    display:flex; gap:12px; margin-bottom:4px;
+    position:relative;
+  }
+  .stop-line {
+    display:flex; flex-direction:column; align-items:center; flex-shrink:0;
+    width:28px;
+  }
+  .stop-dot {
+    width:28px; height:28px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:.72rem; font-weight:800;
+    flex-shrink:0;
+    font-family:'Syne',sans-serif;
+  }
+  .stop-dot.first { background:rgba(34,211,165,0.2); color:var(--green); border:2px solid var(--green); }
+  .stop-dot.last  { background:rgba(255,101,132,0.2); color:var(--accent2); border:2px solid var(--accent2); }
+  .stop-dot.mid   { background:rgba(108,99,255,0.2); color:var(--accent); border:2px solid rgba(108,99,255,0.4); }
+  .stop-connector {
+    width:2px; flex:1; min-height:12px;
+    background:linear-gradient(180deg, var(--border), transparent);
+    margin:2px 0;
+  }
+  .stop-body {
+    flex:1; padding:8px 12px;
+    background:var(--card2);
+    border-radius:10px;
+    margin-bottom:6px;
+    border:1px solid var(--border);
+    transition: all .2s;
+  }
+  .stop-body:hover { border-color:rgba(108,99,255,0.3); }
+  .stop-loc {
+    font-size:.78rem; font-weight:600; margin-bottom:4px;
+    display:flex; align-items:center; gap:5px;
+  }
+  .stop-loc .pin { font-size:.8rem; }
+  .student-chips { display:flex; flex-wrap:wrap; gap:4px; }
+  .chip {
+    padding:2px 8px; border-radius:20px;
+    font-size:.65rem; font-weight:500;
+    background:rgba(108,99,255,0.15);
+    color:var(--accent);
+    border:1px solid rgba(108,99,255,0.2);
+  }
+  .chip.absent {
+    background:rgba(255,101,132,0.15);
+    color:var(--accent2);
+    border-color:rgba(255,101,132,0.2);
+    text-decoration:line-through;
+  }
+
+  /* DESTINATION */
+  .destination {
+    display:flex; gap:12px; margin-top:4px;
+  }
+  .dest-dot {
+    width:28px; height:28px;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:.9rem; flex-shrink:0;
+  }
+  .dest-body {
+    flex:1; padding:8px 12px;
+    background:linear-gradient(135deg,rgba(108,99,255,0.1),rgba(255,101,132,0.1));
+    border-radius:10px;
+    border:1px solid rgba(108,99,255,0.2);
+    font-size:.78rem; font-weight:700;
+    color:var(--text);
+    display:flex; align-items:center;
+  }
+
+  /* MAPS BUTTON */
+  .maps-btn {
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    width:100%; padding:12px;
+    border-radius:12px;
+    background:linear-gradient(135deg,#4285f4,#34a853);
+    color:#fff; font-weight:700; font-size:.82rem;
+    text-decoration:none; border:none; cursor:pointer;
+    margin-top:12px;
+    transition:all .2s;
+    box-shadow:0 4px 20px rgba(66,133,244,0.3);
+  }
+  .maps-btn:hover { transform:translateY(-1px); box-shadow:0 6px 25px rgba(66,133,244,0.4); }
+
+  /* SUMMARY STATS */
+  .stats-row {
+    display:grid; grid-template-columns:repeat(3,1fr); gap:8px;
+    margin-bottom:16px;
+  }
+  .stat-card {
+    background:var(--card); border:1px solid var(--border);
+    border-radius:12px; padding:12px; text-align:center;
+  }
+  .stat-num { font-family:'Syne',sans-serif; font-size:1.4rem; font-weight:800; color:var(--accent); }
+  .stat-label { font-size:.62rem; color:var(--muted); margin-top:2px; }
+
+  /* LOADING */
+  .loader {
+    display:flex; flex-direction:column; align-items:center;
+    justify-content:center; min-height:60vh; gap:16px;
+  }
+  .spinner {
+    width:48px; height:48px;
+    border:3px solid var(--border);
+    border-top-color:var(--accent);
+    border-radius:50%;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  /* EMPTY */
+  .empty {
+    text-align:center; padding:40px 20px;
+    color:var(--muted); font-size:.82rem;
+  }
+  .empty .icon { font-size:2.5rem; margin-bottom:10px; }
+
+  /* SEARCH */
+  .search-bar {
+    width:100%; padding:10px 14px;
+    background:var(--card); border:1.5px solid var(--border);
+    border-radius:12px; color:var(--text);
+    font-family:'DM Sans',sans-serif; font-size:.82rem;
+    margin-bottom:14px; outline:none;
+    transition:border-color .2s;
+  }
+  .search-bar::placeholder { color:var(--muted); }
+  .search-bar:focus { border-color:var(--accent); }
+
+  /* TODAY BADGE */
+  .today-badge {
+    display:inline-block; padding:2px 8px;
+    background:rgba(251,191,36,0.15); color:var(--yellow);
+    border:1px solid rgba(251,191,36,0.3);
+    border-radius:20px; font-size:.62rem; font-weight:600;
+    margin-left:6px; vertical-align:middle;
+  }
+
+  /* ABSENT TOGGLE */
+  .absent-toggle {
+    width:20px; height:20px; border-radius:6px;
+    border:1.5px solid var(--border);
+    background:transparent; cursor:pointer;
+    display:inline-flex; align-items:center; justify-content:center;
+    font-size:.7rem; transition:all .2s; flex-shrink:0;
+    margin-left:auto;
+  }
+  .absent-toggle.marked {
+    background:rgba(255,101,132,0.2);
+    border-color:var(--accent2);
+    color:var(--accent2);
+  }
+
+  /* MODE TOGGLE */
+  .mode-row {
+    display:flex; gap:8px; margin-bottom:16px;
+  }
+  .mode-btn {
+    flex:1; padding:8px;
+    border-radius:10px; border:1.5px solid var(--border);
+    background:var(--card); color:var(--muted);
+    font-size:.75rem; font-weight:600; cursor:pointer;
+    transition:all .2s;
+  }
+  .mode-btn.active {
+    background:rgba(251,191,36,0.15);
+    border-color:rgba(251,191,36,0.4);
+    color:var(--yellow);
+  }
+
+  .fade-in { animation: fadeIn .3s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">
+    <div class="logo-icon">🚌</div>
+    <div>
+      <div class="logo-text">BASU <span>Driver</span></div>
+      <div class="logo-sub">Transport Management</div>
+    </div>
+  </div>
+  <div id="sync-badge" class="sync-badge">⏳ Loading...</div>
+</div>
+
+<div class="container">
+  <div id="app-content">
+    <div class="loader">
+      <div class="spinner"></div>
+      <div style="color:var(--muted);font-size:.82rem">Connecting to BASU server...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══ CONFIG ═══
+const FIREBASE_URL = 'https://basu-nxt-air-schedule-default-rtdb.firebaseio.com';
+
+// ═══ STATE ═══
+let allStudents = [];
+let allRoutes   = [];
+let selRoute    = null;
+let selDay      = null;
+let searchQ     = '';
+let mode        = 'pickup'; // pickup | dropoff
+let absentSet   = new Set(); // student ids marked absent (session only)
+
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const TODAY_MAP = {0:'Sun',1:'Mon',2:'Tue',3:'Wed',4:'Thu',5:'Fri',6:'Sat'};
+const TODAY = TODAY_MAP[new Date().getDay()];
+
+// Noida sector coords (for Google Maps URL)
+const SECTOR_COORDS = {
+  'sector-39':'28.5651,77.3210','sector-42':'28.5698,77.3260',
+  'sector-45':'28.5712,77.3315','sector-47':'28.5739,77.3358',
+  'sector-49':'28.5680,77.3390','sector-73':'28.5853,77.3680',
+  'sector-76':'28.5878,77.3712','sector-77':'28.5891,77.3698',
+  'sector-78':'28.5904,77.3720','sector-99':'28.5921,77.3861',
+  'sector-104':'28.5532,77.3782','sector-105':'28.5518,77.3798',
+  'sector-107':'28.5501,77.3810','sector-116':'28.5450,77.3890',
+  'shatabdi':'28.5601,77.3690','elite golf':'28.5911,77.3730',
+  'antriksh':'28.5895,77.3715','jalvayu':'28.5740,77.3362',
+  'supreme':'28.5918,77.3858','sunworld':'28.5498,77.3812',
+};
+const BASU = '28.5706,77.3850';
+
+function getSector(pickup=''){
+  const m=pickup.match(/sector[- ]*(\d+)/i);
+  return m?parseInt(m[1]):999;
+}
+function getCoordStr(pickup=''){
+  const p=pickup.toLowerCase();
+  for(const[k,v] of Object.entries(SECTOR_COORDS)){
+    if(p.includes(k)) return v;
+  }
+  return null;
+}
+
+// ═══ FIREBASE FETCH (read-only REST) ═══
+async function fetchTransport(){
+  try{
+    const res = await fetch(`${FIREBASE_URL}/transport.json`);
+    if(!res.ok) throw new Error('Network error');
+    const data = await res.json();
+    if(!data) throw new Error('No data');
+    allStudents = data.students || [];
+    allRoutes   = data.routes   || [];
+    document.getElementById('sync-badge').textContent = '✅ Live';
+    document.getElementById('sync-badge').style.cssText = 
+      'font-size:.7rem;padding:4px 10px;border-radius:20px;font-weight:600;background:rgba(34,211,165,0.15);color:#22d3a5;border:1px solid rgba(34,211,165,0.3)';
+    return true;
+  } catch(e){
+    document.getElementById('sync-badge').textContent = '⚠ Offline';
+    document.getElementById('sync-badge').style.cssText =
+      'font-size:.7rem;padding:4px 10px;border-radius:20px;font-weight:600;background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.3)';
+    return false;
+  }
+}
+
+// ═══ RENDER ═══
+function render(){
+  const el = document.getElementById('app-content');
+  if(!allRoutes.length && !allStudents.length){
+    el.innerHTML=`<div class="empty"><div class="icon">📡</div>No transport data found.<br>Ask admin to save data in scheduler.</div>`;
+    return;
+  }
+
+  // Route counts
+  const routeCounts = {};
+  allStudents.forEach(s=>{ routeCounts[s.route]=(routeCounts[s.route]||0)+1; });
+
+  // Day for display
+  const displayDay = selDay || TODAY;
+
+  // Route-filtered students
+  const routeStudents = selRoute
+    ? allStudents.filter(s=>s.route===selRoute)
+    : [];
+
+  // Group by pickup, sort by sector
+  const stops={};
+  routeStudents.forEach(s=>{
+    if(searchQ && !s.name.toLowerCase().includes(searchQ) && !(s.pickup||'').toLowerCase().includes(searchQ)) return;
+    const k=s.pickup||'Unknown';
+    if(!stops[k]) stops[k]=[];
+    stops[k].push(s);
+  });
+  const sortedStops = Object.entries(stops).sort((a,b)=>getSector(a[0])-getSector(b[0]));
+  const totalStops = sortedStops.length;
+
+  // If dropoff mode, reverse order
+  const displayStops = mode==='dropoff' ? [...sortedStops].reverse() : sortedStops;
+
+  // Google Maps URL
+  let mapsUrl='';
+  const validStops = (mode==='dropoff'?[...sortedStops].reverse():sortedStops)
+    .filter(([loc])=>getCoordStr(loc));
+  if(validStops.length>0){
+    const waypts = validStops.map(([loc])=>loc+'+Noida').join('/');
+    mapsUrl=`https://www.google.com/maps/dir/${waypts}/BASU+Classes+Noida`;
+  }
+
+  // Find route driver info
+  const routeInfo = allRoutes.find(r=>r.route===selRoute)||{};
+
+  el.innerHTML = `
+    <!-- Stats -->
+    <div class="stats-row fade-in">
+      <div class="stat-card">
+        <div class="stat-num">${allStudents.length}</div>
+        <div class="stat-label">Total Students</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">${allRoutes.length}</div>
+        <div class="stat-label">Routes</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">${absentSet.size}</div>
+        <div class="stat-label">Absent Today</div>
+      </div>
+    </div>
+
+    <!-- Route selector -->
+    <div class="route-selector fade-in">
+      ${allRoutes.map(r=>`
+        <button class="route-btn ${selRoute===r.route?'active':''}" onclick="selectRoute('${r.route}')">
+          ${r.route}
+          <span class="r-count">${routeCounts[r.route]||0} students</span>
+        </button>
+      `).join('')}
+    </div>
+
+    <!-- Day selector -->
+    <div class="day-selector fade-in">
+      ${DAYS.map(d=>`
+        <button class="day-btn ${(selDay||TODAY)===d?'active':''}" onclick="selectDay('${d}')">
+          ${d}${d===TODAY?'<span class="today-badge">Today</span>':''}
+        </button>
+      `).join('')}
+    </div>
+
+    ${selRoute ? `
+      <!-- Mode toggle -->
+      <div class="mode-row fade-in">
+        <button class="mode-btn ${mode==='pickup'?'active':''}" onclick="setMode('pickup')">🌅 Morning Pickup</button>
+        <button class="mode-btn ${mode==='dropoff'?'active':''}" onclick="setMode('dropoff')">🌆 Evening Drop</button>
+      </div>
+
+      <!-- Search -->
+      <input class="search-bar fade-in" placeholder="🔍 Search student or area..." 
+        oninput="searchQ=this.value.toLowerCase();render()" value="${searchQ}">
+
+      <!-- Driver card -->
+      <div class="driver-card fade-in">
+        <div class="driver-header">
+          <div class="driver-avatar">🚗</div>
+          <div>
+            <div class="driver-name">${selRoute}</div>
+            <div class="driver-meta">
+              ${routeInfo.driver||'Driver not set'} 
+              ${routeInfo.vehicle?'· '+routeInfo.vehicle:''}
+            </div>
+          </div>
+          ${routeInfo.phone?`
+            <div class="driver-phone">
+              <a class="call-btn" href="tel:${routeInfo.phone}">📞 Call</a>
+            </div>
+          `:''}
+        </div>
+
+        <!-- Stop timeline -->
+        <div class="stop-label">
+          ${mode==='pickup'?'🌅 Pickup Order — '+displayDay:'🌆 Drop Order — '+displayDay}
+          (${routeStudents.length} students · ${totalStops} stops)
+        </div>
+
+        ${displayStops.length ? `
+          <div class="timeline">
+            ${displayStops.map(([loc,students],i)=>{
+              const isFirst = i===0;
+              const isLast  = i===displayStops.length-1;
+              const dotClass = isFirst?'first':isLast?'last':'mid';
+              const hasAbsent = students.some(s=>absentSet.has(s.id));
+              return `
+                <div class="stop-item">
+                  <div class="stop-line">
+                    <div class="stop-dot ${dotClass}">${i+1}</div>
+                    ${!isLast?'<div class="stop-connector"></div>':''}
+                  </div>
+                  <div class="stop-body">
+                    <div class="stop-loc">
+                      <span class="pin">📍</span>
+                      <span>${loc}</span>
+                    </div>
+                    <div class="student-chips">
+                      ${students.map(s=>`
+                        <span class="chip ${absentSet.has(s.id)?'absent':''}" 
+                          title="${s.batch}" 
+                          onclick="toggleAbsent('${s.id}')" 
+                          style="cursor:pointer">
+                          ${absentSet.has(s.id)?'✗ ':''}${s.name}
+                        </span>
+                      `).join('')}
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+
+            <!-- Destination -->
+            <div class="destination">
+              <div class="dest-dot">🏫</div>
+              <div class="dest-body">BASU Classes — Destination</div>
+            </div>
+          </div>
+
+          ${mapsUrl?`
+            <a class="maps-btn" href="${mapsUrl}" target="_blank">
+              🗺 Open Route in Google Maps
+            </a>
+          `:''}
+        ` : `<div class="empty" style="padding:20px 0"><div class="icon">🔍</div>No students found</div>`}
+      </div>
+
+      ${absentSet.size>0?`
+        <div style="background:rgba(255,101,132,0.1);border:1px solid rgba(255,101,132,0.2);border-radius:12px;padding:12px;margin-bottom:16px;font-size:.75rem;color:#ff6584;font-weight:600">
+          ⚠ ${absentSet.size} student(s) marked absent today (tap name to toggle)
+        </div>
+      `:''}
+
+    ` : `
+      <div class="empty fade-in">
+        <div class="icon">👆</div>
+        Select a route above to view students & stops
+      </div>
+    `}
+  `;
+}
+
+function selectRoute(r){
+  selRoute = selRoute===r ? null : r;
+  searchQ='';
+  render();
+}
+function selectDay(d){ selDay=d; render(); }
+function setMode(m){ mode=m; render(); }
+function toggleAbsent(id){
+  if(absentSet.has(id)) absentSet.delete(id);
+  else absentSet.add(id);
+  render();
+}
+
+// ═══ INIT ═══
+(async ()=>{
+  await fetchTransport();
+  // Auto-select first route
+  if(allRoutes.length) selRoute = allRoutes[0].route;
+  render();
+
+  // Refresh every 60 seconds (read-only, safe)
+  setInterval(async()=>{
+    await fetchTransport();
+    render();
+  }, 60000);
+})();
+</script>
+</body>
+</html>
